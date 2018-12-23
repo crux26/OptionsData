@@ -32,3 +32,9 @@
 
 # temporary files
 *.asv
+
+# MATLAB related formats
+*.prj
+*.mexw64
+*.css
+*.js
