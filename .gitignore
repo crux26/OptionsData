@@ -1,0 +1,34 @@
+# Excel / csv
+*.xls
+
+*.xlsm
+*.xltm
+*.xlsx
+*.csv
+
+# PDF
+*.pdf
+
+
+# Word
+*.doc
+
+*.docx
+
+
+# text
+*.txt
+# pictures
+*.gif
+
+*.png
+
+*.jpg
+*.jpeg
+*.html
+
+# MATLAB data
+*.mat
+
+# temporary files
+*.asv
