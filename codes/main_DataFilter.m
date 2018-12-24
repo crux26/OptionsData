@@ -65,7 +65,7 @@ T_PutData = [];
 idx_problematic = [];
 % Below takes: s (LAB PC)
 tic;
-for jj=1:length(date_)
+parfor jj=1:length(date_)
     try
         tmpIdx_C = idx_DatePair_C(jj):idx_DatePair_C_next(jj);
         tmpIdx_P = idx_DatePair_P(jj):idx_DatePair_P_next(jj);
