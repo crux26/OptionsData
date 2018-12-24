@@ -24,7 +24,7 @@ K = T_OpData.K;
 fwd = T_OpData.S(1) * exp( (T_OpData.r(1) - T_OpData.q(1)) * T_OpData.TTM(1) );
 K0 = K(find(K < fwd, 1, 'last')); % First K below F
 try
-    if strcmp(T_OpData.cpflag{1}, 'P')
+    if T_OpData.cpflag(1) == 1
         K_nOTM = K(K > K0);
     else
         K_nOTM = K(K < K0);
