@@ -63,7 +63,7 @@ idx_DatePair_P_next = idx_DatePair_P(2:end)-1; idx_DatePair_P = idx_DatePair_P(1
 T_CallData = [];
 T_PutData = []; 
 idx_problematic = [];
-% Below takes: s (LAB PC)
+% Below takes: <6m (dorm)
 tic;
 parfor jj=1:length(date_)
     try
