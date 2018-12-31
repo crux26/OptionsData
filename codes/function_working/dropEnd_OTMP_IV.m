@@ -15,6 +15,7 @@ end
 %% extrap
 m = length(T_PutData.K);
 i=1;    % start from the ITM, more likely to be problematic.
+
 while true
     if min(i+4,m)-(i+1) +1 <= 1  % interp1() needs at least 2 sample points.
         break;
@@ -28,8 +29,8 @@ while true
     IV_ = interp1(K_tmp, IV_tmp, T_PutData.K(i), 'pchip', 'extrap');
     
     %%
-    if ( IV_ <= T_PutData.IV(i+1) && T_PutData.IV(i) >= T_PutData.IV(i+1) ) || ...
-            ( IV_ >= T_PutData.IV(i+1) && T_PutData.IV(i) <= T_PutData.IV(i+1) )
+    if ( IV_ <= T_PutData.IV(i+1) && T_PutData.IV(i) > T_PutData.IV(i+1) ) || ...
+            ( IV_ >= T_PutData.IV(i+1) && T_PutData.IV(i) < T_PutData.IV(i+1) )
         T_PutData.IV(i) = IV_;
         T_PutData.mid(i) = myblsput(T_PutData.S(1), T_PutData.K(i), ...
             T_PutData.r(1), T_PutData.TTM(1), T_PutData.IV(i), T_PutData.q(1));

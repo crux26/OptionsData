@@ -17,11 +17,29 @@ DaysPerYear = 252;
 filename = sprintf('%s\\SPXCall_dly.csv', rawData_path);
 ds = tabularTextDatastore(filename);
 ds.ReadSize = 1e+5;
-dt = distributed(ds);
+% dt = distributed(ds);
+% 
+% % Below takes: 33s (DORM)
+% tic;
+% T = gather(dt);
+% toc;
 
-% Below takes: 33s (DORM)
+T = table();
+n = numpartitions(ds, gcp);
+% with n=14 partitions, process about 2~300k (w/ ReadSize=1e+6)
+% --> bottleneck from here to there;
+% -->? maybe due to memory overflow. Takes many seconds to read anything
+% after a while.
+
 tic;
-T = gather(dt);
+parfor ii=1:n
+    subds = partition(ds, n, ii);
+    while hasdata(subds)
+        T_ = read(subds);
+        T = [T; T_];
+        fprintf('current T.len(): %d \n', size(T_,1));
+    end
+end
 toc;
 
 %%
@@ -41,11 +59,28 @@ CallData = T;
 filename = sprintf('%s\\SPXPut_dly.csv', rawData_path);
 ds = tabularTextDatastore(filename);
 ds.ReadSize = 1e+5;
-dt = distributed(ds);
+% dt = distributed(ds);
+% 
+% % Below takes: 33s (dorm)
+% tic;
+% T = gather(dt);
+% toc;
 
-% Below takes: 33s (dorm)
+T = table();
+n = numpartitions(ds, gcp);
+% with n=14 partitions, process about 2~300k (w/ ReadSize=1e+6)
+% --> bottleneck from here to there;
+% -->? maybe due to memory overflow. Takes many seconds to read anything
+% after a while.
 tic;
-T = gather(dt);
+parfor ii=1:n
+    subds = partition(ds, n, ii);
+    while hasdata(subds)
+        T_ = read(subds);
+        T = [T; T_];
+        fprintf('current T.len(): %d \n', size(T_,1));
+    end
+end
 toc;
 
 %%
@@ -61,11 +96,15 @@ T.tb_m3 = T.tb_m3 / 100 ;
 
 PutData = T;
 
-%% Save call and put data
+%% Sort
+CallData = sortrows(CallData, {'date', 'exdate', 'strike_price'});
+PutData = sortrows(PutData, {'date', 'exdate', 'strike_price'});
 
-% Below takes: 30s (dorm) -> 1363s (lab) wtf?? -> 4604s (dorm): ?????????
+
+%% Save call and put data
+% Below takes: 30s (dorm)
 tic;
-save(sprintf('%s\\rawOpData_SPX_dly.mat', genData_path), ...
+savefast(sprintf('%s\\rawOpData_SPX_dly.mat', genData_path), ...
     'CallData', 'PutData');
 toc;
 

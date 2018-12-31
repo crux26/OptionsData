@@ -37,8 +37,8 @@ PutData = PutData(~isnan(PutData.IV), :);
 CallData.moneyness = CallData.S .* exp( (CallData.r - CallData.q) .* CallData.TTM ) ./ CallData.K;
 PutData.moneyness = PutData.S .* exp( (PutData.r - PutData.q) .* PutData.TTM ) ./ PutData.K;
 
-CallData = CallData(CallData.moneyness <=1.01, :);
-PutData = PutData(PutData.moneyness >= 0.99, :);
+CallData = CallData(CallData.moneyness <=1.1, :);
+PutData = PutData(PutData.moneyness >= 0.9, :);
 
 %%
 date_intersection = intersect([CallData.date, CallData.exdate], [PutData.date, PutData.exdate], 'rows');
@@ -66,6 +66,7 @@ PutData__ = [];
 
 diffStepSize = 1;
 len_C = length(idx_DatePair_C);
+% 94s (dorm)
 tic;
 parfor i=1:len_C
     idx_C = idx_DatePair_C(i) : idx_DatePair_C_next(i);
@@ -78,10 +79,12 @@ parfor i=1:len_C
 end
 toc;
 
-% CallData = CallData__;
+CallData = CallData__;
 
 len_P = length(idx_DatePair_P);
+% (dorm)
 tic;
+% for i=1:len_P
 parfor i=1:len_P
     idx_P = idx_DatePair_P(i) : idx_DatePair_P_next(i);
     PutData_ = PutData(idx_P, :);
@@ -93,8 +96,10 @@ parfor i=1:len_P
 end
 toc;
 
-% PutData = PutData__;
+PutData = PutData__;
 
+CallData = sortrows(CallData, {'date', 'exdate', 'K'});
+PutData = sortrows(PutData, {'date', 'exdate', 'K'});
 %%
 % Below takes: 1405s or 0.4h (lab) -> 4584s (dorm): WTF?
 tic;

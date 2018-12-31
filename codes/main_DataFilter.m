@@ -30,13 +30,13 @@ load(sprintf('%s\\rawOpData_SPX_dly_BSIV_Trim.mat', genData_path), ...
 toc;
 
 %% Use only the intersection of CallData & PutData.
-[date_, ~] = unique([CallData.date, CallData.exdate], 'rows');
-[date__, ~] = unique([PutData.date, PutData.exdate], 'rows');
+[DatePair_C, ~] = unique([CallData.date, CallData.exdate], 'rows');
+[DatePair_P, ~] = unique([PutData.date, PutData.exdate], 'rows');
 
-date_intersect = intersect(date_,date__, 'rows');
-idx_C = ismember([CallData.date, CallData.exdate], date_intersect, 'rows');
+DatePair_intxn = intersect(DatePair_C,DatePair_P, 'rows');
+idx_C = ismember([CallData.date, CallData.exdate], DatePair_intxn, 'rows');
 CallData = CallData(idx_C, :);
-idx_P = ismember([PutData.date, PutData.exdate], date_intersect, 'rows');
+idx_P = ismember([PutData.date, PutData.exdate], DatePair_intxn, 'rows');
 PutData = PutData(idx_P, :);
 
 %% use only intxn
@@ -65,7 +65,11 @@ T_PutData = [];
 idx_problematic = [];
 % Below takes: <6m (dorm)
 tic;
-parfor jj=1:length(date_)
+parfor jj=1:length(DatePair_C)
+	% 50k ~ 60k should be tested next
+	% >60k: no problem
+	% 78841~78863: all problematic!!!!
+% 	parfor jj=1:length(date_)
     try
         tmpIdx_C = idx_DatePair_C(jj):idx_DatePair_C_next(jj);
         tmpIdx_P = idx_DatePair_P(jj):idx_DatePair_P_next(jj);
@@ -80,7 +84,7 @@ parfor jj=1:length(date_)
         idx_problematic = [idx_problematic; jj];
     end
     if floor(jj/1000)*1000 == jj
-        fprintf('current i: %f out of %f\n', jj, length(date_));
+        fprintf('current i: %f out of %f\n', jj, length(DatePair_C));
     end
 end
 toc;
@@ -91,7 +95,7 @@ PutData = T_PutData;
 %%
 % 0.02s (dorm1)
 tic;
-save(sprintf('%s\\rawOpData_SPX_dly_BSIV_Trim_fltr.mat', genData_path), ...
+savefast(sprintf('%s\\rawOpData_SPX_dly_BSIV_Trim_fltr.mat', genData_path), ...
     'CallData', 'PutData');
 toc;
 

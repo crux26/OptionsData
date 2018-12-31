@@ -20,8 +20,6 @@ addpath(sprintf('%s\\codes\\IV calculation', homeDirectory));
 load(sprintf('%s\\rawOpData_SPX_dly.mat', genData_path), ...
     'CallData', 'PutData');
 
-
-
 %% isnan(tb_m3): Already interpolated in SAS.
 
 
@@ -37,16 +35,16 @@ load(sprintf('%s\\rawOpData_SPX_dly.mat', genData_path), ...
 %     TTM_C, CallData(:,18), [], CallData(:,14), [], {'Call'});
 % toc;
 
-% Below takes: 61s (dorm): Below can be problematic. Read <NOTE_problemOfmyblsXiv.m>.
+% Below takes: 147s (dorm): Below can be problematic. Read <NOTE_problemOfmyblsXiv.m>.
 tic;
-CallData.IV = myblscalliv(CallData.spindx, CallData.strike_price, CallData.tb_m3 * DaysPerYear, ...
+CallData.IV = myblscalliv(CallData.close, CallData.strike_price, CallData.tb_m3 * DaysPerYear, ...
     CallData.datedif_bus/DaysPerYear, CallData.mid, CallData.div, CallData.impl_volatility);
 toc;
 
 %% Through the procedure below, checked that blsimpv().result and myblscall().result are the same for ~isnan(IV).
 
 % Below will throw away non-stable results which should have been discarded.
-Call_ = myblscall(CallData.spindx, CallData.strike_price, CallData.tb_m3 * DaysPerYear, ...
+Call_ = myblscall(CallData.close, CallData.strike_price, CallData.tb_m3 * DaysPerYear, ...
     CallData.datedif_bus/DaysPerYear, CallData.IV, CallData.div);
 % (NaN<3)==0, (NaN>3)==0: So must use find( <rTol) and then exclude those idx.
 idx_C = abs( (Call_-CallData.mid)./CallData.mid ) < rTol;
@@ -60,14 +58,14 @@ CallData.IV(~idx_C) = NaN;
 %     TTM_P, PutData(:,18), [], PutData(:,14), [], {'Put'});
 % toc;
 
-%Below takes: 36s (dorm): Below can be problematic. Read <NOTE_problemOfmyblsXiv.m>.
+%Below takes: 63s (dorm): Below can be problematic. Read <NOTE_problemOfmyblsXiv.m>.
 tic;
-PutData.IV = myblsputiv(PutData.spindx, PutData.strike_price, PutData.tb_m3 * DaysPerYear , ...
+PutData.IV = myblsputiv(PutData.close, PutData.strike_price, PutData.tb_m3 * DaysPerYear , ...
     PutData.datedif_bus/DaysPerYear, PutData.mid, PutData.div, PutData.impl_volatility);
 toc;
 
 % Below will throw away non-stable results which should have been discarded.
-Put_ = myblsput(PutData.spindx, PutData.strike_price, PutData.tb_m3 * DaysPerYear, ...
+Put_ = myblsput(PutData.close, PutData.strike_price, PutData.tb_m3 * DaysPerYear, ...
     PutData.datedif_bus/DaysPerYear, PutData.IV, PutData.div);
 idx_P = abs( (Put_ - PutData.mid)./PutData.mid ) < rTol;
 PutData.impl_volatility(~idx_P) = NaN;
@@ -93,8 +91,8 @@ PutVolDev(idx_PutVolDev) = 1;
 CallVolDev = table(CallVolDev);
 PutVolDev = table(PutVolDev);
 
-% Below takes: 32s (dorm)
+% Below takes: 26s (dorm)
 tic;
-save(sprintf('%s\\rawOpData_SPX_dly_BSIV.mat', genData_path), ...
+savefast(sprintf('%s\\rawOpData_SPX_dly_BSIV.mat', genData_path), ...
     'CallData', 'CallVolDev', 'PutData', 'PutVolDev');
 toc;
