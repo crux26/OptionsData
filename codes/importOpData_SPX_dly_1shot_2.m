@@ -1,3 +1,4 @@
+%% <importOpData_SPX_dly_1shot.m> -> <importOpData_SPX_dly_1shot2.m>
 %% Alternative to <importOpData_SPX_dly_1shot.m>
 
 % To be precise, this is somewhat "manipulation", but must be done and is
@@ -17,7 +18,7 @@ genData_path = sprintf('%s\\data\\gen_data', homeDirectory);
 addpath(sprintf('%s\\codes\\IV calculation', homeDirectory));
 addpath(sprintf('%s\\codes\\function_working', homeDirectory));
 
-% 300s (lab)
+% 300s (lab), 5.5s (dorm)
 tic;
 load(sprintf('%s\\rawOpData_SPX_dly_BSIV_Trim.mat', genData_path), ...
     'CallData', 'PutData');

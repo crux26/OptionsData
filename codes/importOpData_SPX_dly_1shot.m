@@ -1,4 +1,5 @@
-%% <importOpData_dly.m> -> <importOpData_dly_BSIV.m> -> <importOpData_dly_BSIV_Trim.m>
+%% <importOpData_SPX_dly.m> -> <importOpData_SPX_dly_1shot.m>
+
 %% dropEnd_OTMC(), dropEnd_OTMP() should be applied here.
 % To be precise, this is somewhat "manipulation", but must be done and is
 % not a paper-subject matter. Hence, should be done under ~/OptionsData/.
@@ -87,7 +88,7 @@ toc;
 
 CallData = CallData__;
 
-% 28366s or 7.9h (lab) --> 289s (dorm): WTF????????
+% 28366s or 7.9h (lab) --> 289s (dorm): through exclusion of string
 len_P = length(idx_DatePair_P);
 tic;
 parfor i=1:len_P

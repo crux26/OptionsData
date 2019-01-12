@@ -1,4 +1,4 @@
-%% <importOpData_SPX_dly.m> -> <importOpData_SPX_dly_1shot_dorm.m>
+%% <importOpData_SPX_dly.m> -> <importOpData_SPX_dly_1shot.m>
 % goto HigherMoments if needed: -> <OpData_dly_BSIV_Trim.m> -> <OpData_dly_BSIV_Trim_extrap.m>
 %% Import the SPX Call data
 clear;clc;
