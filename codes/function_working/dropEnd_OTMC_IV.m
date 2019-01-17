@@ -1,10 +1,12 @@
 %% Main purpose: fix the most endpoint only.
-function [T_CallData] = dropEnd_OTMC_IV(T_CallData)
+function [T_CallData] = dropEnd_OTMC_IV(T_CallData, tmpMult)
 if size(T_CallData, 1) < 2 % Can be empty for "CallData_2".
     return;
 end
 
-tmpMult = 1.5;
+if nargin == 1
+	tmpMult = 1.5;
+end
 
 %% drop
 % if Kc(end) >>> Kc(end-1), crazy extrapolation results occur.

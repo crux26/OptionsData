@@ -1,11 +1,14 @@
-function [T_PutData] = dropEnd_OTMP(T_PutData)
+function [T_PutData] = dropEnd_OTMP(T_PutData, tmpMult)
 % "mid" is NOT "S".
 % Copied from TRP, but changed the structure here.
 if isempty(T_PutData)   % Can be empty for "PutData_2".
     T_PutData=[];
     return;
 end
-tmpMult = 1.5;
+
+if nargin == 1
+	tmpMult = 1;
+end
 
 %% drop
 if length(T_PutData.mid)>2 && (T_PutData.K(1) < T_PutData.K(2) - tmpMult*(T_PutData.K(3)-T_PutData.K(2)))

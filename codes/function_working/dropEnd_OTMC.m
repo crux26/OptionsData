@@ -1,10 +1,13 @@
-function [T_CallData] = dropEnd_OTMC(T_CallData)
+function [T_CallData] = dropEnd_OTMC(T_CallData, tmpMult)
 % "mid" is NOT "S".
 if isempty(T_CallData)  % Can be empty for "CallData_2".
     T_CallData=[];
     return;
 end
-tmpMult = 1.5;
+
+if nargin == 1
+	tmpMult = 1;
+end
 
 %% drop
 % if Kc(end) >>> Kc(end-1), crazy extrapolation results occur.

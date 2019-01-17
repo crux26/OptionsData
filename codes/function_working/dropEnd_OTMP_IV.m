@@ -1,10 +1,12 @@
 %% Main purpose: fix the most endpoint only.
-function [T_PutData] = dropEnd_OTMP_IV(T_PutData)
+function [T_PutData] = dropEnd_OTMP_IV(T_PutData, tmpMult)
 if size(T_PutData, 1) < 2
     return;
 end
 
-tmpMult = 1.5;
+if nargin == 1
+	tmpMult = 1.5;
+end
 
 %% drop
 if length(T_PutData.mid)>2 && (T_PutData.K(1) < T_PutData.K(2) - tmpMult*(T_PutData.K(3)-T_PutData.K(2)))
