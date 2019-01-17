@@ -71,14 +71,15 @@ PutData__ = cell2table(cell(0, size(PutData, 2)), 'VariableNames', PutData.Prope
 % T.vertcat() (concatenating with []) is far faster than definition & slicing (due to tabular.subsasgnParens()).
 % Takes some time somewhere i > 10000; <.3s for each i.
 
-% parfor(): explosion in lab. FUCKFUCKFUCKFUCKFUCKFUCKFUCK
-% about 28366s or 7.9h (lab)
 len_C = length(idx_DatePair_C);
+tmpMult = 1;
+% 28366s or 7.9h (lab) --> 289s (dorm): through exclusion of string
+
 tic;
 parfor i=1:len_C
     idx_C = idx_DatePair_C(i) : idx_DatePair_C_next(i);
     CallData_ = CallData(idx_C, :);
-    CallData_ = dropEnd_OTMC(CallData_);    
+    CallData_ = dropEnd_OTMC(CallData_, tmpMult);    
     CallData__ = [CallData__; CallData_];
     if floor(i/1000)*1000 == i
         fprintf('Call. current i: %d / %d\n', i, len_C);
@@ -88,13 +89,14 @@ toc;
 
 CallData = CallData__;
 
-% 28366s or 7.9h (lab) --> 289s (dorm): through exclusion of string
 len_P = length(idx_DatePair_P);
+tmpMult=1;
+% 28366s or 7.9h (lab) --> 289s (dorm): through exclusion of string
 tic;
 parfor i=1:len_P
     idx_P = idx_DatePair_P(i) : idx_DatePair_P_next(i);
     PutData_ = PutData(idx_P, :);
-    PutData_ = dropEnd_OTMP(PutData_);
+    PutData_ = dropEnd_OTMP(PutData_, tmpMult);
     PutData__ = [PutData__; PutData_];
     if floor(i/1000)*1000 == i
         fprintf('Put. current i: %d / %d\n', i, len_P);
