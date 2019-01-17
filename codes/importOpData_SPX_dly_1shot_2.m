@@ -34,12 +34,12 @@ PutData = PutData(PutData.datedif_cal >= 14, :);
 CallData = CallData(~isnan(CallData.IV), :);
 PutData = PutData(~isnan(PutData.IV), :);
 
-%% Discard ITMC, ITMP.
+%% Discard ITMC, ITMP --> Not discard it. Even ITMs will be used in HW (2017).
 CallData.moneyness = CallData.S .* exp( (CallData.r - CallData.q) .* CallData.TTM ) ./ CallData.K;
 PutData.moneyness = PutData.S .* exp( (PutData.r - PutData.q) .* PutData.TTM ) ./ PutData.K;
 
-CallData = CallData(CallData.moneyness <=1.1, :);
-PutData = PutData(PutData.moneyness >= 0.9, :);
+% CallData = CallData(CallData.moneyness <=1.1, :);
+% PutData = PutData(PutData.moneyness >= 0.9, :);
 
 %%
 date_intersection = intersect([CallData.date, CallData.exdate], [PutData.date, PutData.exdate], 'rows');
@@ -67,12 +67,13 @@ PutData__ = [];
 
 diffStepSize = 1;
 len_C = length(idx_DatePair_C);
+tmpMult = 1;
 % 94s (dorm)
 tic;
 parfor i=1:len_C
     idx_C = idx_DatePair_C(i) : idx_DatePair_C_next(i);
     CallData_ = CallData(idx_C, :);
-    CallData_ = dropEnd_OTMC_IV(CallData_);
+    CallData_ = dropEnd_OTMC_IV(CallData_, tmpMult);
     CallData__ = [CallData__; CallData_];
     if floor(i/1000)*1000 == i
         fprintf('Call. current i: %d / %d\n', i, len_C);
@@ -83,13 +84,14 @@ toc;
 CallData = CallData__;
 
 len_P = length(idx_DatePair_P);
+tmpMult = 1;
 % (dorm)
 tic;
 % for i=1:len_P
 parfor i=1:len_P
     idx_P = idx_DatePair_P(i) : idx_DatePair_P_next(i);
     PutData_ = PutData(idx_P, :);
-    PutData_ = dropEnd_OTMP_IV(PutData_);
+    PutData_ = dropEnd_OTMP_IV(PutData_, tmpMult);
     PutData__ = [PutData__; PutData_];
     if floor(i/1000)*1000 == i
         fprintf('Put. current i: %d / %d\n', i, len_C);
@@ -99,8 +101,8 @@ toc;
 
 PutData = PutData__;
 
-CallData = sortrows(CallData, {'date', 'exdate', 'K'});
-PutData = sortrows(PutData, {'date', 'exdate', 'K'});
+CallData = sortrows(CallData, {'secid', 'date', 'exdate', 'K'});
+PutData = sortrows(PutData, {'secid', 'date', 'exdate', 'K'});
 %%
 % Below takes: 1405s or 0.4h (lab) -> 4584s (dorm): WTF?
 tic;
