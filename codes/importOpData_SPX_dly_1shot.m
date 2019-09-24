@@ -1,4 +1,6 @@
-%% <importOpData_SPX_dly.m> -> <importOpData_SPX_dly_1shot.m>
+%% <importOpData_SPX_dly.m> -> <importOpData_SPX_dly_BSIV.m> -> <importOpData_SPX_dly_1shot.m> -> <importOpData_SPX_dly_1shot2.m>
+%% <importOpData_SPX_dly_1shot_2.m>: Additional to <importOpData_SPX_dly_1shot.m>. Not necessary per se.
+
 
 %% dropEnd_OTMC(), dropEnd_OTMP() should be applied here.
 % To be precise, this is somewhat "manipulation", but must be done and is
@@ -20,8 +22,14 @@ addpath(sprintf('%s\\codes\\IV calculation', homeDirectory));
 addpath(sprintf('%s\\codes\\function_working', homeDirectory));
 
 % 300s (lab)
+% tic;
+% load(sprintf('%s\\rawOpData_SPX_dly.mat', genData_path), ...
+%     'CallData', 'PutData');
+% toc;
+
+% Manually calculated IV, delta, vega in place of WRDS-provided ones.
 tic;
-load(sprintf('%s\\rawOpData_SPX_dly.mat', genData_path), ...
+load(sprintf('%s\\rawOpData_SPX_dly_BSIV.mat', genData_path), ...
     'CallData', 'PutData');
 toc;
 
@@ -30,18 +38,20 @@ t1 = datetime('now');
 %% changing multiple variable names only accessible by column number
 CallData.Properties.VariableNames{'close'} = 'S';
 CallData.Properties.VariableNames{'strike_price'} = 'K';
-CallData.Properties.VariableNames{'tb_m3'} = 'r';
+CallData.Properties.VariableNames{'zerocd'} = 'r';
 CallData.Properties.VariableNames{'div'} = 'q';
 CallData.Properties.VariableNames{'best_bid'} = 'Bid';
 CallData.Properties.VariableNames{'best_offer'} = 'Ask';
 CallData.Properties.VariableNames{'datedif_bus'} = 'TTM';
-
 CallData.TTM  = CallData.TTM / DaysPerYear;
+
 CallData.Properties.VariableNames{'impl_volatility'} = 'IV';
+CallData.Properties.VariableDescription{'IV'} = 'optionm';
+
 
 PutData.Properties.VariableNames{'close'} = 'S';
 PutData.Properties.VariableNames{'strike_price'} = 'K';
-PutData.Properties.VariableNames{'tb_m3'} = 'r';
+PutData.Properties.VariableNames{'zerocd'} = 'r';
 PutData.Properties.VariableNames{'div'} = 'q';
 PutData.Properties.VariableNames{'best_bid'} = 'Bid';
 PutData.Properties.VariableNames{'best_offer'} = 'Ask';
@@ -49,6 +59,7 @@ PutData.Properties.VariableNames{'datedif_bus'} = 'TTM';
 PutData.TTM  = PutData.TTM / DaysPerYear;
 
 PutData.Properties.VariableNames{'impl_volatility'} = 'IV';
+PutData.Properties.VariableDescription{'IV'} = 'optionm';
 
 [DatePair_C, idx_DatePair_C, ~] = unique([CallData.date, CallData.exdate], 'rows');
 idx_DatePair_C = [idx_DatePair_C; length(CallData.exdate)+1];
@@ -106,13 +117,7 @@ toc;
 
 PutData = PutData__;
 
-% Below takes: 28s (dorm)
-% tic;
-% save(sprintf('%s\\rawOpData_SPX_BSIV_Trim.mat', genData_path), ...
-%     'CallData', 'PutData', '-v7.3');
-% toc;
-
-% Below takes: 1405s or 0.4h (lab) -> 4584s (dorm): WTF?
+% (dorm)
 tic;
 savefast(sprintf('%s\\rawOpData_SPX_dly_BSIV_Trim.mat', genData_path), ...
     'CallData', 'PutData');
@@ -120,10 +125,7 @@ toc;
 
 t2 = datetime('now');
 filename = mfilename;
-sendEmail(filename, t1, t2);
-
-% 4901s (dorm): more or less the same
-% tic;
-% save(sprintf('%s\\rawOpData_SPX_dly_BSIV_Trim_Nofast.mat', genData_path), ...
-%     'CallData', 'PutData', '-nocompression');
-% toc;
+try
+	sendEmail(filename, t1, t2);
+catch
+end
