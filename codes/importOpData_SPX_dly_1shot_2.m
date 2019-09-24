@@ -1,10 +1,12 @@
-%% <importOpData_SPX_dly_1shot.m> -> <importOpData_SPX_dly_1shot2.m>
-%% Alternative to <importOpData_SPX_dly_1shot.m>
+%% <importOpData_SPX_dly.m> -> <importOpData_SPX_dly_BSIV.m> -> <importOpData_SPX_dly_1shot.m> -> <importOpData_SPX_dly_1shot2.m>
+%% Additional to <importOpData_SPX_dly_1shot.m>. Not necessary per se.
 
 % To be precise, this is somewhat "manipulation", but must be done and is
 % not a paper-subject matter. Hence, should be done under ~/OptionsData/.
 clear;clc;
 DaysPerYear = 252;
+t1 = datetime('now');
+filename = mfilename;
 
 isDorm = true;
 if isDorm == true
@@ -24,13 +26,12 @@ load(sprintf('%s\\rawOpData_SPX_dly_BSIV_Trim.mat', genData_path), ...
     'CallData', 'PutData');
 toc;
 
-t1 = datetime('now');
 
 %% Drop TTM < 14D_cal (or 10D_bus)
 CallData = CallData(CallData.datedif_cal >= 14, :);
 PutData = PutData(PutData.datedif_cal >= 14, :);
 
-%% drop isnan(.IV)
+%% drop isnan(IV). (Now impl_volatility is IV). IV_BS is IV_.
 CallData = CallData(~isnan(CallData.IV), :);
 PutData = PutData(~isnan(PutData.IV), :);
 
@@ -74,7 +75,7 @@ parfor i=1:len_C
     idx_C = idx_DatePair_C(i) : idx_DatePair_C_next(i);
     CallData_ = CallData(idx_C, :);
     CallData_ = dropEnd_OTMC_IV(CallData_, tmpMult);
-    CallData__ = [CallData__; CallData_];
+    CallData__ = [CallData__; CallData_];	
     if floor(i/1000)*1000 == i
         fprintf('Call. current i: %d / %d\n', i, len_C);
     end
@@ -111,5 +112,7 @@ savefast(sprintf('%s\\rawOpData_SPX_dly_BSIV_Trim2.mat', genData_path), ...
 toc;
 
 t2 = datetime('now');
-filename = mfilename;
-sendEmail(filename, t1, t2);
+try
+	sendEmail(filename, t1, t2);
+catch
+end
