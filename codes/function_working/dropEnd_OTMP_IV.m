@@ -8,11 +8,11 @@ if nargin == 1
 	tmpMult = 1.5;
 end
 
-%% drop
-if length(T_PutData.mid)>2 && (T_PutData.K(1) < T_PutData.K(2) - tmpMult*(T_PutData.K(3)-T_PutData.K(2)))
-% 	P = P(2:end); Kp = Kp(2:end); IV = IV(2:end);
-    T_PutData = T_PutData(2:end,:);
-end
+%% drop - deprecated. covered by dropEnd_OTMP().
+% if length(T_PutData.mid)>2 && (T_PutData.K(1) < T_PutData.K(2) - tmpMult*(T_PutData.K(3)-T_PutData.K(2)))
+% % 	P = P(2:end); Kp = Kp(2:end); IV = IV(2:end);
+%     T_PutData = T_PutData(2:end,:);
+% end
 
 %% extrap
 m = length(T_PutData.K);
@@ -28,8 +28,13 @@ while true
     K_tmp = T_PutData.K(~idx);
     IV_tmp = T_PutData.IV(~idx);
         
-    IV_ = interp1(K_tmp, IV_tmp, T_PutData.K(i), 'pchip', 'extrap');
-    
+    IV_ = interp1(K_tmp, IV_tmp, T_PutData.K(i), 'pchip', 'extrap'); % pchip, spline can be <0 for some cases.
+    % 1 negative for T_OpData_P, but could resulted in other erroneous points.
+	% --> However, in this code, 'nearest' wouldn't solve the problem (infinite loop)
+	if IV_ < 0
+		break;
+	end
+	
     %%
     if ( IV_ <= T_PutData.IV(i+1) && T_PutData.IV(i) > T_PutData.IV(i+1) ) || ...
             ( IV_ >= T_PutData.IV(i+1) && T_PutData.IV(i) < T_PutData.IV(i+1) )

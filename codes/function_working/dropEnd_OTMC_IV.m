@@ -8,13 +8,13 @@ if nargin == 1
 	tmpMult = 1.5;
 end
 
-%% drop
+%% drop - deprecated. covered by dropEnd_OTMC().
 % if Kc(end) >>> Kc(end-1), crazy extrapolation results occur.
-while length(T_CallData.mid)>2 && ...
-        (T_CallData.K(end) > T_CallData.K(end-1) + tmpMult*(T_CallData.K(end-1)-T_CallData.K(end-2)))
-%     C = C(1:end-1); Kc = Kc(1:end-1); IV = IV(1:end-1);
-	T_CallData = T_CallData(1:end-1,:);
-end
+% while length(T_CallData.mid)>2 && ...
+%         (T_CallData.K(end) > T_CallData.K(end-1) + tmpMult*(T_CallData.K(end-1)-T_CallData.K(end-2)))
+% %     C = C(1:end-1); Kc = Kc(1:end-1); IV = IV(1:end-1);
+% 	T_CallData = T_CallData(1:end-1,:);
+% end
 
 %% extrap
 m = length(T_CallData.K);
@@ -28,20 +28,26 @@ while true
     K_tmp = T_CallData.K(~idx);
     IV_tmp = T_CallData.IV(~idx);
     
-    IV_ = interp1(K_tmp, IV_tmp, T_CallData.K(i), 'pchip', 'extrap'); 
-    
-    if ( IV_ >= T_CallData.IV(i-1) && T_CallData.IV(i-1) > T_CallData.IV(i) ) || ...
-            (IV_ <= T_CallData.IV(i-1) && T_CallData.IV(i-1) < T_CallData.IV(i) )
-        T_CallData.IV(i) = IV_;
-        T_CallData.mid(i) = myblscall(T_CallData.S(1), T_CallData.K(i), ...
-            T_CallData.r(1), T_CallData.TTM(1), T_CallData.IV(i), T_CallData.q(1));
-        i=min(i+1, m);
-    else
-        i=i-1;
-    end
-    if i==0
-        break;
-    end
+    IV_ = interp1(K_tmp, IV_tmp, T_CallData.K(i), 'pchip', 'extrap');  % pchip,spline yields <0 for some cases.
+	% 1 negative for T_OpData_C, but could resulted in other erroneous points.
+	% --> However, in this code, 'nearest' wouldn't solve the problem (infinite loop)
+	if IV_ < 0
+		break;
+	end
+	
+	% Corrects the sudden change in the sign of derivative.
+	if ( IV_ >= T_CallData.IV(i-1) && T_CallData.IV(i-1) > T_CallData.IV(i) ) || ...
+			(IV_ <= T_CallData.IV(i-1) && T_CallData.IV(i-1) < T_CallData.IV(i) )
+		T_CallData.IV(i) = IV_;
+		T_CallData.mid(i) = myblscall(T_CallData.S(1), T_CallData.K(i), ...
+			T_CallData.r(1), T_CallData.TTM(1), T_CallData.IV(i), T_CallData.q(1));
+		i=min(i+1, m);
+	else
+		i=i-1;
+	end
+	if i==0
+		break;
+	end
 end
 
 

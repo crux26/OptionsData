@@ -17,29 +17,11 @@ while length(T_CallData.mid)>2 && ...
 	T_CallData = T_CallData(1:end-1,:);
 end
 
-%% extrap
+%% extrap - deprecated. Below will be covered in dropEnd_OTMC_IV().
 % Now has multiple TTMs, which does not work for the below case. should be fixed.
-m = length(T_CallData.K);
-i=m;
-while length(T_CallData.mid)>2 && (T_CallData.mid(i)>=T_CallData.mid(i-1))
-    if (i-1)-max(i-4,1) +1 <= 1 % interp1() needs at least 2 sample points.
-        break;
-    end
-    IV_ = interp1(T_CallData.K(max(i-4,1):i-1), T_CallData.IV(max(i-4,1):i-1), ...
-        T_CallData.K(i), 'nearest', 'extrap'); % pchip,spline yields <0 for some cases.
-    if IV_ <= T_CallData.IV(i-1) && IV_ < T_CallData.IV(i)
-        T_CallData.IV(i) = IV_;
-        T_CallData.mid(i) = myblscall(T_CallData.S(1), T_CallData.K(i), ...
-            T_CallData.r(1), T_CallData.TTM(1), T_CallData.IV(i), T_CallData.q(1));
-        i=i+1;
-        if i>=m
-            break;
-        end
-    else
-        i=i-1;
-    end
-end
-
+% m = length(T_CallData.K);
+% i=m;
+% 
 % while length(T_CallData.mid)>2 && (T_CallData.mid(i)>=T_CallData.mid(i-1))
 %     if (i-1)-max(i-4,1) +1 <= 1 % interp1() needs at least 2 sample points.
 %         break;
@@ -48,8 +30,8 @@ end
 %         T_CallData.K(i), 'nearest', 'extrap'); % pchip,spline yields <0 for some cases.
 %     if IV_ <= T_CallData.IV(i-1) && IV_ < T_CallData.IV(i)
 %         T_CallData.IV(i) = IV_;
-%         T_CallData.mid(i) = myblscall(unique(T_CallData.S), T_CallData.K(i), ...
-%             unique(T_CallData.r), unique(T_CallData.TTM), T_CallData.IV(i), unique(T_CallData.q));
+%         T_CallData.mid(i) = myblscall(T_CallData.S(1), T_CallData.K(i), ...
+%             T_CallData.r(1), T_CallData.TTM(1), T_CallData.IV(i), T_CallData.q(1));
 %         i=i+1;
 %         if i>=m
 %             break;
