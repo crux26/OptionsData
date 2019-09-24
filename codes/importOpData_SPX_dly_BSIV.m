@@ -1,10 +1,11 @@
-%% <importOpData_dly.m> -> <importOpData_dly_BSIV.m> -> <importOpData_dly_BSIV_Trim.m>
+%% <importOpData_SPX_dly.m> -> <merge_OpDataNzerocd.m> -> <importOpData_SPX_dly_BSIV.m> -> <importOpData_SPX_dly_1shot.m>
 % goto HigherMoments if needed: -> <OpData_dly_BSIV_Trim.m> -> <OpData_dly_BSIV_Trim_extrap.m>
 
 %% Records non-sensical IVs.
 clear;clc;
 DaysPerYear = 252;
-rTol = 5e-2;
+rTol_mid = 5e-2;
+rTol_IV = 5e-2;
 
 isDorm = true;
 if isDorm == true
@@ -17,8 +18,10 @@ genData_path = sprintf('%s\\data\\gen_data', homeDirectory);
 
 addpath(sprintf('%s\\codes\\IV calculation', homeDirectory));
 
-load(sprintf('%s\\rawOpData_SPX_dly.mat', genData_path), ...
+tic;
+load(sprintf('%s\\rawOpData_SPXNzerocd_dly.mat', genData_path), ...
     'CallData', 'PutData');
+toc;
 
 %% isnan(tb_m3): Already interpolated in SAS.
 
@@ -35,21 +38,28 @@ load(sprintf('%s\\rawOpData_SPX_dly.mat', genData_path), ...
 %     TTM_C, CallData(:,18), [], CallData(:,14), [], {'Call'});
 % toc;
 
-% Below takes: 147s (dorm): Below can be problematic. Read <NOTE_problemOfmyblsXiv.m>.
+% Below takes: 147s (dorm): Below can be problematic.
+% Read <NOTE_problemOfmyblsXiv.m> --> fixed.
 tic;
-CallData.IV = myblscalliv(CallData.close, CallData.strike_price, CallData.tb_m3 * DaysPerYear, ...
+CallData.IV_ = myblscalliv(CallData.close, CallData.strike_price, CallData.zerocd, ...
     CallData.datedif_bus/DaysPerYear, CallData.mid, CallData.div, CallData.impl_volatility);
 toc;
 
+CallData.Properties.VariableDescriptions{'mid_'} = 'myMid';
+CallData.Properties.VariableDescriptions{'IV_'} = 'myIV';
+
 %% Through the procedure below, checked that blsimpv().result and myblscall().result are the same for ~isnan(IV).
 
+[CallnRow, ~] = size(CallData);
+[PutnRow, ~] = size(PutData);
+
 % Below will throw away non-stable results which should have been discarded.
-Call_ = myblscall(CallData.close, CallData.strike_price, CallData.tb_m3 * DaysPerYear, ...
-    CallData.datedif_bus/DaysPerYear, CallData.IV, CallData.div);
+CallData.mid_ = myblscall(CallData.close, CallData.strike_price, CallData.zerocd, ...
+    CallData.datedif_bus/DaysPerYear, CallData.IV_, CallData.div);
 % (NaN<3)==0, (NaN>3)==0: So must use find( <rTol) and then exclude those idx.
-idx_C = abs( (Call_-CallData.mid)./CallData.mid ) < rTol;
-CallData.impl_volatility(~idx_C) = NaN;
-CallData.IV(~idx_C) = NaN;
+idx_C = abs( (CallData.mid_ - CallData.mid) ./ CallData.mid) > rTol_mid;
+CallData.midDev = zeros(CallnRow, 1); % 1 if Vol_true deviates more than 5% from IV_BS.
+CallData.midDev(idx_C) = 1;
 
 % -------------------------------------------------------------------------------------------
 %Below takes: 13757s or 3.8h (LAB PC, 1996-2015)
@@ -60,39 +70,37 @@ CallData.IV(~idx_C) = NaN;
 
 %Below takes: 63s (dorm): Below can be problematic. Read <NOTE_problemOfmyblsXiv.m>.
 tic;
-PutData.IV = myblsputiv(PutData.close, PutData.strike_price, PutData.tb_m3 * DaysPerYear , ...
+PutData.IV_ = myblsputiv(PutData.close, PutData.strike_price, PutData.zerocd, ...
     PutData.datedif_bus/DaysPerYear, PutData.mid, PutData.div, PutData.impl_volatility);
 toc;
 
 % Below will throw away non-stable results which should have been discarded.
-Put_ = myblsput(PutData.close, PutData.strike_price, PutData.tb_m3 * DaysPerYear, ...
-    PutData.datedif_bus/DaysPerYear, PutData.IV, PutData.div);
-idx_P = abs( (Put_ - PutData.mid)./PutData.mid ) < rTol;
-PutData.impl_volatility(~idx_P) = NaN;
-PutData.IV(~idx_P) = NaN;
+PutData.mid_ = myblsput(PutData.close, PutData.strike_price, PutData.zerocd, ...
+    PutData.datedif_bus/DaysPerYear, PutData.IV_, PutData.div);
+idx_P = abs( (PutData.mid_ - PutData.mid) ./ PutData.mid ) > rTol_mid;
+PutData.midDev = zeros(PutnRow, 1);
+PutData.midDev(idx_P) = 1;
 
+PutData.Properties.VariableDescriptions{'mid_'} = 'myMid';
+PutData.Properties.VariableDescriptions{'IV_'} = 'myIV';
 %% Record observations whose IV deviates from model IV more than 5%.
 % This is quite often the case, as the traded price is far from
 % model-derived price.
 
-[CallnRow, ~] = size(CallData);
-[PutnRow, ~] = size(PutData);
-
 %Below took: 0.004s (LAB PC, 1996-2015)
-CallVolDev = zeros(CallnRow, 1); % 1 if Vol_true deviates more than 5% from IV_BS.
-idx_CallVolDev = find(CallData.IV < 0.95*CallData.impl_volatility | CallData.IV > 1.05*CallData.impl_volatility);
-CallVolDev(idx_CallVolDev) = 1;
+CallData.VolDev = zeros(CallnRow, 1); % 1 if Vol_true deviates more than 5% from IV_BS.
+% idx_CallVolDev = find(CallData.IV_ < 0.95*CallData.impl_volatility | CallData.IV_ > 1.05*CallData.impl_volatility);
+idx_CallVolDev = ( abs(CallData.IV_ - CallData.impl_volatility) ./ CallData.impl_volatility > rTol_IV );
+CallData.VolDev(idx_CallVolDev) = 1;
 
 % Below took: 0.004s (LAB PC, 1996-2015)
-PutVolDev = zeros(PutnRow, 1);
-idx_PutVolDev = find(PutData.IV < 0.95*PutData.impl_volatility | PutData.IV > 1.05*PutData.impl_volatility);
-PutVolDev(idx_PutVolDev) = 1;
-
-CallVolDev = table(CallVolDev);
-PutVolDev = table(PutVolDev);
+PutData.VolDev = zeros(PutnRow, 1);
+% idx_PutVolDev = find(PutData.IV_ < 0.95*PutData.impl_volatility | PutData.IV_ > 1.05*PutData.impl_volatility);
+idx_PutVolDev = ( abs(PutData.IV_ - PutData.impl_volatility) ./ PutData.impl_volatility > rTol_IV );
+PutData.VolDev(idx_PutVolDev) = 1;
 
 % Below takes: 26s (dorm)
 tic;
 savefast(sprintf('%s\\rawOpData_SPX_dly_BSIV.mat', genData_path), ...
-    'CallData', 'CallVolDev', 'PutData', 'PutVolDev');
+    'CallData', 'PutData');
 toc;
