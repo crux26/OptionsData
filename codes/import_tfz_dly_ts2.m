@@ -36,4 +36,15 @@ T.CALDT = datenum(T.CALDT);
 
 %%
 T_ = T(:, {'KYTREASNOX', 'CALDT', 'RDTREASNO', 'RDCRSPID', 'TDNOMPRC', 'TDYLD', 'TDDURATN'});
-save(sprintf('%s\\raw_tfz_dly_ts2.mat', genData_path), 'T_');
+% (KY)TREASNO: Treasury record identifier
+% (KY)CRSPID: CRSP-assigned unique ID
+
+% RDTREASNO: Daily series of related TREASNOs
+% RDCRSPID: Daily series of related CRSPIDs
+% TDNOMPRC: daily nominal price
+% TDYLD: daily series of promised daily yield
+% TDDURATN: daily series of Macaulay's duration
+
+tic;
+savefast(sprintf('%s\\raw_tfz_dly_ts2.mat', genData_path), 'T_');
+toc;
