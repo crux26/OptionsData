@@ -1,4 +1,4 @@
-%% <importOpData_SPX_dly.m> -> <importOpData_SPX_dly_1shot.m>
+%% <importOpData_SPX_dly.m> -> <merge_OpDataNzerocd.m> -> <importOpData_SPX_dly_BSIV.m> -> <importOpData_SPX_dly_1shot.m>
 % goto HigherMoments if needed: -> <OpData_dly_BSIV_Trim.m> -> <OpData_dly_BSIV_Trim_extrap.m>
 %% Import the SPX Call data
 clear;clc;
@@ -51,6 +51,7 @@ toc;
 
 T.cpflag = zeros( size(T, 1), 1); % call
 T.Properties.VariableNames{'TB_M3'} = 'tb_m3';
+T.Properties.VariableDescriptions{'tb_m3'} = 'rf';
 T.tb_m3 = T.tb_m3 / 100 ;
 
 CallData = T;
@@ -92,6 +93,7 @@ toc;
 
 T.cpflag = ones(size(T, 1), 1); % put
 T.Properties.VariableNames{'TB_M3'} = 'tb_m3';
+T.Properties.VariableDescriptions{'tb_m3'} = 'rf';
 T.tb_m3 = T.tb_m3 / 100 ;
 
 PutData = T;
