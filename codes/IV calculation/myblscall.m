@@ -6,4 +6,5 @@ d1(isnan(d1))=0; d2(isnan(d2))=0;
 F = S.*exp((r-q).*tau);
 
 price = exp(-r.*tau) .* (F.*mynormcdf1(d1)-K.*mynormcdf1(d2));
-price = reshape(price, size(S));
+price = reshape(price, size(K));
+% changed above from size(S) to size(K).
